@@ -1,4 +1,4 @@
-#include "nzandber_lib.h"
+#include "auxlib.h"
 
 int cerr(int return_value, const char *err_msg)
 {

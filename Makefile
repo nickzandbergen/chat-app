@@ -3,10 +3,10 @@ CXX = g++
 
 all: bin server client
 
-server: src/server.cpp src/nzandber_lib.cpp
+server: src/server.cpp src/auxlib.cpp
 	$(CXX) $(CFLAGS) -pthread $^ -o bin/$@ -lpthread
 
-client : src/client.cpp src/nzandber_lib.cpp
+client : src/client.cpp src/auxlib.cpp
 	$(CXX) $(CFLAGS) $^ -o bin/$@ -lreadline
 
 bin:
@@ -18,6 +18,4 @@ kill:
 
 clean:
 	rm -r bin
-tar:
-	tar -cvzf asg5.tar.gz $(git ls-files)
 

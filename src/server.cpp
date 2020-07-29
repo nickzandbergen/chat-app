@@ -54,7 +54,7 @@ int main(int argc, const char *argv[])
 
     if (argc != 2)
     {
-        fprintf(stderr, "./myserver <port-number>\n");
+        fprintf(stderr, "./server <port-number>\n");
         if (argc < 2)
             return EXIT_FAILURE;
     }
@@ -62,7 +62,7 @@ int main(int argc, const char *argv[])
     uint16_t port = (uint16_t)strtol(argv[1], nullptr, 10);
     if (port == 0)
     {
-        fprintf(stderr, "port 0\n");
+        fprintf(stderr, "error: port 0\n");
         return EXIT_FAILURE;
     }
 
