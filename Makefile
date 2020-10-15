@@ -3,10 +3,10 @@ CXX = g++
 
 all: bin server client
 
-server: src/server.cpp src/auxlib.cpp
+server: server.cpp auxlib.cpp
 	$(CXX) $(CFLAGS) -pthread $^ -o bin/$@ -lpthread
 
-client : src/client.cpp src/auxlib.cpp
+client : client.cpp auxlib.cpp
 	$(CXX) $(CFLAGS) $^ -o bin/$@ -lreadline
 
 bin:

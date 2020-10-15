@@ -22,7 +22,7 @@ int arg_parsing(const char *argv[], uint32_t &address, uint16_t &port)
     }
     if ((ip_a[0] | ip_a[1] | ip_a[2] | ip_a[3]) > 0xFF)
     {
-        fprintf(stderr, "parse_server_file: IP address field too big\n");
+        fprintf(stderr, "Parse_server_file: IP address field too big\n");
         ip_a[0] &= 0xFF;
         ip_a[1] &= 0xFF;
         ip_a[2] &= 0xFF;

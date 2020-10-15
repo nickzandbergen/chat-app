@@ -88,7 +88,6 @@ int main(int argc, const char *argv[])
         {
             if (errno == EINTR)
             {
-
                 errno = 0;
                 continue;
             }

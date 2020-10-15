@@ -1,6 +1,5 @@
 #include "auxlib.h"
-// #include "rl/readline-8.0/readline.h"
-#include <readline/readline.h> // for home use 
+#include <readline/readline.h> // readline 8.0+ 
 
 using namespace std;
 
@@ -236,13 +235,12 @@ int main(int argc, const char *argv[])
             if (c == 'n')
             {
                 fprintf(stderr, "Client ID is already taken.\n");
-                return EXIT_FAILURE;
             }
             else
             {
                 fprintf(stderr, "Invalid server response %c\n", c);
-                return EXIT_FAILURE;
             }
+            return EXIT_FAILURE;
         }
         listen(server_sock, 10);
     }
