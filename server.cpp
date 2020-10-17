@@ -189,6 +189,7 @@ void *handle_connection(void *nothing)
         fprintf(stderr, "Unrecognized protocol  code %c\n", protocol_code);
     }
     m_unlock;
+    
     if (shutdown(comm_fd, SHUT_RDWR) < 0) // close TCP
         perror("shutdown()");
     close(comm_fd);

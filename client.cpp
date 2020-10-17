@@ -373,7 +373,7 @@ static void readline_callback_fn(char *str)
             if (state == INFO)
             {
                 int s = send_cmd('l', id);
-                shutdown(s, SHUT_WR); //to send 1 byte on a socket withoutt io_ctl shennanigans
+                shutdown(s, SHUT_WR); //to send 1 byte on a socket without io_ctl shennanigans
                 ssize_t rd;
                 char buf[256];
                 while ((rd = recv(s, buf, sizeof(buf), 0)) > 0)
