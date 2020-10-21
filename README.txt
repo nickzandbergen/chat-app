@@ -5,7 +5,6 @@ README
 ******
 
 FILES
-  asg5
   > bin <- doesn't exist until you run make
 
   > doc
@@ -92,7 +91,7 @@ A chat connection between A and B (initiated by A) does as follows
   - if A receives a no, it stops
   - At some point in the above, B receives A's ID from it.
 
-After which, both of them are chatting: messages are prefixed with length their
+After which, both of them are chatting: messages are prefixed with their
 length and the prompt and actual body are set as two separate messages.
 A client leaving is noted by the socket closing
 
@@ -100,14 +99,3 @@ CLIENT
   In general, the client is a very large while loop with a select() waiting for things to happen.
 There's many, many, if/else statements and switches because of the different behaviour in states.
 This is compounded with branching options: the worst of it is triaged into functions.
-
-  The weird control flow isn't helped by the glut of global variables, but with the interrupt 
-function needing access to them and being in a completely different scope, I don't see a way around 
-that, but it is single threaded so there's no data races with itself. State is volatile because an
-interrupt handler changes it. 
-
-ERROR HANDLING
-  None. A misbehaving client/server can stall everything indefinitely by promising something and not 
-delivering. But you can still do that with the TCP protocol so nothing I can do without a raw socket
-and coding TCP myself with harsher timeouts? There is a check for invalid/unexpected protocol codes.
-  I didn't hit any segfaults or other errors in testing. 

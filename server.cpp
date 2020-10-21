@@ -145,7 +145,7 @@ void *handle_connection(void *nothing)
         auto it = clients.find(id);
         if (it == clients.end() || !it->second.waiting)
         {
-            send_char(comm_fd, 'n'); //doesn't exist
+            send_char(comm_fd, 'n'); //doesn't exist or isn't waiting
         }
         else
         {
