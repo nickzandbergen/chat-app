@@ -9,24 +9,16 @@ import (
 
 const exitFailure = 1
 
-type serverData struct {
-	addr uint32
-	port uint16
+type clientData struct {
+	addr []byte // 4 byte
+	port []byte // 2 byte
 	wait bool
 }
 
-var clients = make(map[string]serverData)
+var clients = make(map[string]clientData)
 var m = new(sync.RWMutex)
 
-// func err(value, err) {
-// 	if err != nil {
-// 		fmt.Printf("Err: %v\n", err)
-// 		os.Exit(exitFailure)
-// 	}
-// 	return value
-// }
-
-// todo use To16(IP) byte and ParseIP(string0
+// echo -n -e y\\x00\\x03foo | nc 127.0.0.1 5
 
 func main() {
 	var args []string = os.Args
@@ -60,38 +52,38 @@ func readLenPrefacedBuf(c net.Conn) string {
 	if err != nil || rv < 2 {
 		fmt.Printf("Err: %v\n", err)
 	}
+
 	var len uint16 = uint16(b[0])
 	len <<= 8
 	len |= uint16(b[1])
-
-	fmt.Printf("\"%v\"\n", len)
 
 	buffer := make([]byte, len)
 	c.Read(buffer)
 	id := string(buffer)
 
+	fmt.Printf("%v:%v\n", id, len)
+
 	return id
 }
 
+func getAddrData(addr net.Addr) (ip []byte, port []byte) {
+	host, portString, _ := net.SplitHostPort(addr.String())
+	ip = net.ParseIP(host).To4()
+	port = make([]byte, 2)
+
+	var res uint16 = 0
+	for _, b := range []byte(portString) {
+		res *= 10
+		res += uint16(b - 48) // '0'
+	}
+
+	port[0] = byte(res >> 8)
+	port[1] = byte(res & 0xFF)
+	return
+}
+
 func handleConnection(c net.Conn) {
-	fmt.Println("Got connection!")
-
-	b := make([]byte, 3)
-
-	// for {
-	// 	rv, err := c.Read(buffer)
-	// 	fmt.Printf("%v\n", rv)
-	// 	if err != nil {
-	// 		fmt.Printf("Err: %v\n", err)
-	// 		os.Exit(exitFailure)
-	// 	}
-
-	// 	if rv == 0 {
-	// 		break
-	// 	}
-
-	// 	fmt.Printf("\"%v\"\n", string(buffer))
-	// }
+	b := make([]byte, 1)
 
 	_, err := c.Read(b[0:1])
 	if err != nil {
@@ -103,37 +95,41 @@ func handleConnection(c net.Conn) {
 
 	switch b[0] {
 	case 'a': // availability
-		checkAvailability(c)
+		checkUsernameAvailability(id, c)
 	case 'q': //query ID for connection details
-		queryClient(id, c)
+		getConnectionInfo(id, c)
 	case 'r': // remove
-
+		removeClient(id, c)
 	case 'l': //list
-
+		listClients(c)
 	case 'u', 'w': // unwait
 		setWaitClient(id, c, b[0] == 'u')
 
 	case '0': // N/A
 
 	default:
-		fmt.Printf("Couldn't recognize %d", rune(b[0]))
+		fmt.Printf("Couldn't recognize %d\n", rune(b[0]))
 	}
+	c.Close()
 	return
 }
 
-func checkAvailability(id string, c net.Conn) {
+func checkUsernameAvailability(id string, c net.Conn) {
 	m.Lock()
 
-	res, found := clients[id]
+	_, found := clients[id]
+	var b []byte = make([]byte, 1)
 
-	if found {
+	if !found { //id free, can use
 		// send 'y' back
-		addr := c.RemoteAddr()
-		host, port, _ := net.SplitHostPort(addr.String()
-		ip := net.ParseIP(addr.String())
+		b[0] = 'y'
+		ip, port := getAddrData(c.RemoteAddr())
+		clients[id] = clientData{ip, port, false}
 	} else {
 		// send a 'n' back
+		b[0] = 'n'
 	}
+	c.Write(b)
 
 	m.Unlock()
 	return
@@ -142,6 +138,13 @@ func checkAvailability(id string, c net.Conn) {
 func listClients(c net.Conn) {
 	m.RLock()
 
+	i := 1
+	for k := range clients {
+		fmt.Fprintf(c, "%v) %v\n", i, k)
+		fmt.Printf("%v) %v\n", i, k)
+		i++
+	}
+
 	m.RUnlock()
 	return
 }
@@ -149,31 +152,35 @@ func listClients(c net.Conn) {
 func setWaitClient(id string, c net.Conn, waitStatus bool) {
 	m.Lock()
 
+	res, found := clients[id]
+	if found {
+		res.wait = waitStatus
+	}
+
 	m.Unlock()
 	return
 }
 
 func removeClient(id string, c net.Conn) {
 	m.Lock()
-
+	delete(clients, id)
 	m.Unlock()
 	return
 }
-
-func addClient(id string, c net.Conn) {
-	m.Lock()
-
-	m.Unlock()
-	return
-}
-
-func queryClient(id string, c net.Conn) {
+func getConnectionInfo(id string, c net.Conn) {
 	m.Lock()
 	res, found := clients[id]
-	if found == false || !res.wait {
-		// 'n'
-	} else {
+	var b []byte = make([]byte, 1)
+
+	if found && res.wait {
 		// 'y' | addr | port
+		b[0] = 'y'
+		c.Write(b)
+	} else {
+		b[0] = 'n'
+		c.Write(b)
 	}
 	m.Unlock()
+
+	return
 }
