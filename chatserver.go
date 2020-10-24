@@ -176,6 +176,8 @@ func getConnectionInfo(id string, c net.Conn) {
 		// 'y' | addr | port
 		b[0] = 'y'
 		c.Write(b)
+		c.Write(res.addr)
+		c.Write(res.port)
 	} else {
 		b[0] = 'n'
 		c.Write(b)
