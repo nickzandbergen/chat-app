@@ -4,50 +4,17 @@ Nick Zandbergen
 README
 ******
 
-FILES
-  > bin <- doesn't exist until you run make
-
-  > doc
-    DESIGN <- Describes design
-    README <- You are here
-
-  > src
-    client.cpp  <- source code of client
-    server.cpp  <- source code of server
-    auxlib.cpp  <- utility functions
-    auxlib.h    <- includes
-	
-  Makefile <- note that "make" does a lot of stuff
-
 Assumptions
-- Both client and server agree on endianness
-- map's keys are ordered alphabetically by code point is ok
 - Some operations on ints are atomic or an interrupt won't happen
   at the checks and leave a partial value
-
-Limitations
-
-- See line 4
 
 - /connect parsing is incredibly lazy and assumes 1 space after connect then a nonzero length ID.
   - "/connect" without a space isn't recognized
 
-- /list is alphabetical by code point: so 'b' is between 'A' and 'a'
-
 - Prompt displaying is reliant on rl_clear_visible_line()
   - From https://ftp.gnu.org/gnu/readline/ 
 
-- Does not have empty prompts scroll up
-- Indexes messages with uint16_t, which could theoretically overflow
-
-******
-DESIGN
-******
-
-SERVER-CLIENT INTERACTION
-
-Every single client/server follows a query and optional response. The client opens and closes
-a new socket for each request because TCP has no packet boundaries and SCTP isn't on the timeshare.
+- Stores messages' lengths with uint16_t, which could theoretically overflow
 
 PROTOCOL
 Protocols are identified by lowercase letters, which is the first byte the client sends.
@@ -83,10 +50,10 @@ Chatting is entirely between clients.
 - A client is always listening with select()
 
 A chat connection between A and B (initiated by A) does as follows
-1) A queries the server for B's INFO
+1) A queries the server for B's info
   - if B doesn't exist or isn't waiting, A stops.
 2) A sends B a request to chat: the character 'c'
-  - if connect fails for A, it stops and removes B's info from the server
+  - if connect fails for A, it stops and removes B's info from the server (B is presumed "dead")
 3) B responds with either a yes or no to chat, depending on if it's waiting
   - if A receives a no, it stops
   - At some point in the above, B receives A's ID from it.
@@ -95,7 +62,6 @@ After which, both of them are chatting: messages are prefixed with their
 length and the prompt and actual body are set as two separate messages.
 A client leaving is noted by the socket closing
 
-CLIENT
-  In general, the client is a very large while loop with a select() waiting for things to happen.
-There's many, many, if/else statements and switches because of the different behaviour in states.
-This is compounded with branching options: the worst of it is triaged into functions.
+TODO (note to self)
+- have client not TCP handshake per every message (or SCTP)\
+  - figure out a way to benchmark the above
